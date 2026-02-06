@@ -42,14 +42,7 @@ public class HttpBodyLoggingFilter extends OncePerRequestFilter {
 
             if (shouldLog(request, status, responseBody)) {
                 String path = resolvePath(request);
-                LOGGER.info("HTTP {} {}\nstatus={}\ndurationMs={}\nrequestBody={}\nresponseBody={}",
-                        request.getMethod(),
-                        path,
-                        status,
-                        duration,
-                        requestBody,
-                        responseBody
-                );
+                LOGGER.info("HTTP {} {}\nstatus={}\ndurationMs={}\nrequestBody={}\nresponseBody={}", request.getMethod(), path, status, duration, requestBody, responseBody);
             }
 
             res.copyBodyToResponse();
