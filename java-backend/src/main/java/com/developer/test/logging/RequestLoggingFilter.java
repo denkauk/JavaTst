@@ -14,8 +14,6 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 public class RequestLoggingFilter extends OncePerRequestFilter {
-
-
     private static final Logger LOGGER = LoggerFactory.getLogger(RequestLoggingFilter.class);
 
     @Override
@@ -24,24 +22,22 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
                                     FilterChain chain) throws ServletException, IOException {
 
         long startNanos = System.nanoTime();
+        Exception error = null;
 
         try {
             chain.doFilter(request, response);
         } catch (Exception ex) {
-            long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
-            String path = buildPath(request);
-            int status = response.getStatus() >= 400 ? response.getStatus() : 500;
-            LOGGER.error("request method={} path={} status={} durationMs={} error={}",
-                    request.getMethod(), path, status, durationMs, ex, ex);
-
+            error = ex;
             throw ex;
         } finally {
             long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
             String path = buildPath(request);
             int status = response.getStatus();
-            if (status < 500) {
-                LOGGER.info("request method={} path={} status={} durationMs={}",
-                        request.getMethod(), path, status, durationMs);
+            if (error == null) {
+                LOGGER.info("request method={} path={} status={} durationMs={}", request.getMethod(), path, status, durationMs);
+            } else {
+                int errorStatus = status >= 400 ? status : 500;
+                LOGGER.error("request method={} path={} status={} durationMs={} error={}", request.getMethod(), path, errorStatus, durationMs, error, error);
             }
         }
     }

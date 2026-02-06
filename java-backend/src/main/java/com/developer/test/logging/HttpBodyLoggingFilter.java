@@ -19,7 +19,6 @@ import java.nio.charset.StandardCharsets;
 
 @Component
 public class HttpBodyLoggingFilter extends OncePerRequestFilter {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpBodyLoggingFilter.class);
 
     @Override
