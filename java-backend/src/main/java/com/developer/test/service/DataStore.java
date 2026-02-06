@@ -24,9 +24,9 @@ public class DataStore {
         users.put(2, new User(2, "Jane Smith", "jane@example.com", "designer"));
         users.put(3, new User(3, "Bob Johnson", "bob@example.com", "manager"));
         
-        tasks.put(1, new Task(1, "Implement authentication", "pending", 1));
-        tasks.put(2, new Task(2, "Design user interface", "in-progress", 2));
-        tasks.put(3, new Task(3, "Review code changes", "completed", 3));
+        tasks.put(1, new Task(1, "Implement authentication", Task.Status.PENDING, 1));
+        tasks.put(2, new Task(2, "Design user interface", Task.Status.IN_PROGRESS, 2));
+        tasks.put(3, new Task(3, "Review code changes", Task.Status.COMPLETED, 3));
         
         nextUserId.set(4);
         nextTaskId.set(4);
@@ -45,7 +45,7 @@ public class DataStore {
         
         return allTasks.stream()
                 .filter(task -> {
-                    boolean matchStatus = status == null || status.isEmpty() || task.getStatus().equals(status);
+                    boolean matchStatus = status == null || status.isEmpty();
                     boolean matchUserId = userId == null || userId.isEmpty() || 
                             task.getUserId() == Integer.parseInt(userId);
                     return matchStatus && matchUserId;
@@ -60,18 +60,49 @@ public class DataStore {
         
         for (Task task : tasks.values()) {
             switch (task.getStatus()) {
-                case "pending":
+                case PENDING:
                     stats.getTasks().setPending(stats.getTasks().getPending() + 1);
                     break;
-                case "in-progress":
+                case IN_PROGRESS:
                     stats.getTasks().setInProgress(stats.getTasks().getInProgress() + 1);
                     break;
-                case "completed":
+                case COMPLETED:
                     stats.getTasks().setCompleted(stats.getTasks().getCompleted() + 1);
                     break;
             }
         }
         
         return stats;
+    }
+
+    public User createUser(User user) {
+        int id = nextUserId.getAndIncrement();
+        user.setId(id);
+        users.put(id, user);
+        return user;
+    }
+
+    public Task createTask(Task task) {
+        int id = nextTaskId.getAndIncrement();
+        task.setId(id);
+        tasks.put(id, task);
+        return task;
+    }
+
+    public Task updateTask(int id, Task updated) {
+        Task existing = tasks.get(id);
+        if (existing == null) {
+            return null;
+        }
+        if (updated.getTitle() != null) {
+            existing.setTitle(updated.getTitle());
+        }
+        if (updated.getStatus() != null) {
+            existing.setStatus(updated.getStatus());
+        }
+        if (updated.getUserId() != 0) {
+            existing.setUserId(updated.getUserId());
+        }
+        return existing;
     }
 }

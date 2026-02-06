@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping
 @CrossOrigin(origins = "*")
 public class HealthController {
-    
+    ///  http://localhost:8080/actuator/health
     @GetMapping("/health")
     public ResponseEntity<HealthResponse> health() {
         HealthResponse response = new HealthResponse("ok", "Java backend is running");
