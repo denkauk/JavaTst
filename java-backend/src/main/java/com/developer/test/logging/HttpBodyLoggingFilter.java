@@ -8,7 +8,9 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import javax.servlet.FilterChain;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
+import javax.servlet.DispatcherType;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -36,18 +38,45 @@ public class HttpBodyLoggingFilter extends OncePerRequestFilter {
 
             String requestBody = getRequestBody(req);
             String responseBody = getResponseBody(res);
+            int status = res.getStatus();
 
-            LOGGER.info("HTTP {} {}\nstatus={}\ndurationMs={}\nrequestBody={}\nresponseBody={}",
-                    request.getMethod(),
-                    request.getRequestURI(),
-                    res.getStatus(),
-                    duration,
-                    requestBody,
-                    responseBody
-            );
+            if (shouldLog(request, status, responseBody)) {
+                String path = resolvePath(request);
+                LOGGER.info("HTTP {} {}\nstatus={}\ndurationMs={}\nrequestBody={}\nresponseBody={}",
+                        request.getMethod(),
+                        path,
+                        status,
+                        duration,
+                        requestBody,
+                        responseBody
+                );
+            }
 
             res.copyBodyToResponse();
         }
+    }
+
+    @Override
+    protected boolean shouldNotFilterErrorDispatch() {
+        return false;
+    }
+
+    private boolean shouldLog(HttpServletRequest request, int status, String responseBody) {
+        if (request.getDispatcherType() == DispatcherType.ERROR) {
+            return true;
+        }
+
+        return status < 500 || !responseBody.isBlank();
+    }
+
+    private String resolvePath(HttpServletRequest request) {
+        if (request.getDispatcherType() == DispatcherType.ERROR) {
+            Object errorPath = request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI);
+            if (errorPath instanceof String && !((String) errorPath).isBlank()) {
+                return (String) errorPath;
+            }
+        }
+        return request.getRequestURI();
     }
 
     private String getRequestBody(ContentCachingRequestWrapper req) {
