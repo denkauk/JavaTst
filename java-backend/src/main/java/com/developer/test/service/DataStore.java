@@ -4,6 +4,8 @@ import com.developer.test.model.Task;
 import com.developer.test.model.User;
 import com.developer.test.dto.StatsResponse;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,14 +34,17 @@ public class DataStore {
         nextTaskId.set(4);
     }
 
+    @Cacheable(cacheNames = "users")
     public List<User> getUsers() {
         return new ArrayList<>(users.values());
     }
 
+    @Cacheable(cacheNames = "userById", key = "#id")
     public User getUserById(int id) {
         return users.get(id);
     }
 
+    @Cacheable(cacheNames = "tasks")
     public List<Task> getTasks(String status, String userId) {
         List<Task> allTasks = new ArrayList<>(tasks.values());
         
@@ -53,6 +58,7 @@ public class DataStore {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(cacheNames = "stats")
     public StatsResponse getStats() {
         StatsResponse stats = new StatsResponse();
         stats.getUsers().setTotal(users.size());
@@ -75,6 +81,7 @@ public class DataStore {
         return stats;
     }
 
+    @CacheEvict(cacheNames = {"users", "stats"}, allEntries = true)
     public User createUser(User user) {
         if (userExists(user)) {
             throw new DuplicateException("User already exists");
@@ -85,6 +92,7 @@ public class DataStore {
         return user;
     }
 
+    @CacheEvict(cacheNames = {"tasks", "stats"}, allEntries = true)
     public Task createTask(Task task) {
         if (taskExists(task)) {
             throw new DuplicateException("Task already exists for user");
@@ -103,6 +111,7 @@ public class DataStore {
         return tasks.values().contains(task);
     }
 
+    @CacheEvict(cacheNames = {"tasks", "stats"}, allEntries = true)
     public Task updateTask(int id, Task updated) {
         Task existing = tasks.get(id);
         if (existing == null) {
