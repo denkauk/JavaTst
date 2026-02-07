@@ -76,6 +76,9 @@ public class DataStore {
     }
 
     public User createUser(User user) {
+        if (userExists(user)) {
+            throw new DuplicateException("User already exists");
+        }
         int id = nextUserId.getAndIncrement();
         user.setId(id);
         users.put(id, user);
@@ -83,10 +86,21 @@ public class DataStore {
     }
 
     public Task createTask(Task task) {
+        if (taskExists(task)) {
+            throw new DuplicateException("Task already exists for user");
+        }
         int id = nextTaskId.getAndIncrement();
         task.setId(id);
         tasks.put(id, task);
         return task;
+    }
+
+    public boolean userExists(User user) {
+        return users.values().contains(user);
+    }
+
+    public boolean taskExists(Task task) {
+        return tasks.values().contains(task);
     }
 
     public Task updateTask(int id, Task updated) {
@@ -106,3 +120,5 @@ public class DataStore {
         return existing;
     }
 }
+
+
